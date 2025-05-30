@@ -29,20 +29,10 @@ func encode(str string) string {
 		var ch3 uint32 = (bits & (0b111111 << 6)) >> 6
 		var ch4 uint32 = bits & (0b111111)
 
-		output = append(output, getCharacter(ch1))
-		output = append(output, getCharacter(ch2))
-		output = append(output, getCharacter(ch3))
-		output = append(output, getCharacter(ch4))
-
-		// Prints for debugging
-		// fmt.Printf("octet 1 : %08b\n", bytes[i])
-		// fmt.Printf("octet 2 :         %08b\n", bytes[i+1])
-		// fmt.Printf("octet 3 :                 %08b\n", bytes[i+2])
-		// fmt.Printf("combined: %024b\n", bits)
-		// fmt.Printf("ch1     : %06b\n", ch1)
-		// fmt.Printf("ch2     :       %06b\n", ch2)
-		// fmt.Printf("ch3     :             %06b\n", ch3)
-		// fmt.Printf("ch4     :                   %06b\n", ch4)
+		output = append(output, getCharacterFromIndex(ch1))
+		output = append(output, getCharacterFromIndex(ch2))
+		output = append(output, getCharacterFromIndex(ch3))
+		output = append(output, getCharacterFromIndex(ch4))
 	}
 
 	for i := range padsNeeded {
@@ -52,20 +42,31 @@ func encode(str string) string {
 	return string(output)
 }
 
-func getCharacter(val uint32) rune {
-	if val >= 64 {
+var charMap = map[uint32]rune{
+	// Upper-case letters
+	0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H',
+	8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P',
+	16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X',
+	24: 'Y', 25: 'Z',
+	// Lower-case letters
+	26: 'a', 27: 'b', 28: 'c', 29: 'd', 30: 'e', 31: 'f', 32: 'g', 33: 'h',
+	34: 'i', 35: 'j', 36: 'k', 37: 'l', 38: 'm', 39: 'n', 40: 'o', 41: 'p',
+	42: 'q', 43: 'r', 44: 's', 45: 't', 46: 'u', 47: 'v', 48: 'w', 49: 'x',
+	50: 'y', 51: 'z',
+	// Digits
+	52: '0', 53: '1', 54: '2', 55: '3', 56: '4', 57: '5', 58: '6', 59: '7',
+	60: '8', 61: '9',
+	// Special characters
+	62: '+',
+	63: '/',
+}
+
+func getCharacterFromIndex(val uint32) rune {
+	char, exists := charMap[val]
+
+	if !exists {
 		panic(fmt.Sprintf("invalid value '%d' in getCharacter", val))
 	}
 
-	if val < 26 { // Upper-case
-		return rune(val + 'A')
-	} else if val < 52 { // Lower-case
-		return rune((val - 26) + 'a')
-	} else if val < 62 { // digits
-		return rune(val - 52 + '0')
-	} else if val == 62 {
-		return '+'
-	} else {
-		return '/'
-	}
+	return char
 }
