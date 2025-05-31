@@ -16,7 +16,8 @@ func main() {
 		if len(os.Args) < 3 {
 			printUsageAndExit()
 		}
-		_ = decode(os.Args[2])
+		output := decode(os.Args[2])
+		fmt.Println(output)
 	} else {
 		output := encode(os.Args[1])
 		fmt.Println(output)
