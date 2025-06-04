@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -21,15 +22,21 @@ type Game struct {
 }
 
 func NewGame() *Game {
+	grid := NewGrid(GridWidth, GridHeight)
+	grid.Randomize()
+
 	return &Game{
-		grid:   NewGrid(GridWidth, GridHeight),
+		grid: grid,
 		images: NewImages(CellWidth, CellHeight),
 	}
 }
 
 func (game *Game) Update() error {
 	game.grid.Tick()
-	game.grid.Randomize(.10)
+	
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		game.grid.Randomize()
+	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyQ) {
 		return ebiten.Termination
