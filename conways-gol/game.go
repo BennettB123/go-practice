@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -12,9 +14,8 @@ const ScreenWidth int = 1000
 const ScreenHeight int = 1000
 const GridWidth int = 50
 const GridHeight int = 50
-const CellWidth int = ScreenWidth/GridWidth;
-const CellHeight int = ScreenHeight/GridHeight;
-
+const CellWidth int = ScreenWidth / GridWidth
+const CellHeight int = ScreenHeight / GridHeight
 
 type Game struct {
 	grid   Grid
@@ -26,14 +27,14 @@ func NewGame() *Game {
 	grid.Randomize()
 
 	return &Game{
-		grid: grid,
+		grid:   grid,
 		images: NewImages(CellWidth, CellHeight),
 	}
 }
 
 func (game *Game) Update() error {
 	game.grid.Tick()
-	
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		game.grid.Randomize()
 	}
@@ -46,8 +47,11 @@ func (game *Game) Update() error {
 }
 
 func (game *Game) Draw(screen *ebiten.Image) {
-	game.drawGrid(screen);
+	game.drawGrid(screen)
 	game.drawGridLines(screen)
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %d", int(ebiten.ActualFPS())))
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %d", int(ebiten.ActualTPS())), 0, 20)
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -72,7 +76,7 @@ func (game *Game) drawGrid(screen *ebiten.Image) {
 	for y := range GridHeight {
 		for x := range GridWidth {
 			opt.GeoM.Reset()
-			opt.GeoM.Translate(float64(x * CellWidth), float64(y * CellHeight))
+			opt.GeoM.Translate(float64(x*CellWidth), float64(y*CellHeight))
 
 			if game.grid.Get(x, y) == Alive {
 				screen.DrawImage(game.images.aliveCell, &opt)
