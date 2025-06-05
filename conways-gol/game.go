@@ -18,8 +18,10 @@ const CellWidth int = ScreenWidth / GridWidth
 const CellHeight int = ScreenHeight / GridHeight
 
 type Game struct {
-	grid   Grid
-	images Images
+	gui           *Gui
+	grid          Grid
+	images        Images
+	gridTickAccum float64 // accumulator for grid tick timing
 }
 
 func NewGame() *Game {
@@ -27,21 +29,28 @@ func NewGame() *Game {
 	grid.Randomize()
 
 	return &Game{
+		gui:    NewGui(),
 		grid:   grid,
 		images: NewImages(CellWidth, CellHeight),
 	}
 }
 
 func (game *Game) Update() error {
-	game.grid.Tick()
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
-		game.grid.Randomize()
-	}
-
 	if ebiten.IsKeyPressed(ebiten.KeyQ) {
 		return ebiten.Termination
 	}
+
+	// determine if we need to update grid cells based on updatesPerSec
+	dt := 1.0 / ebiten.ActualTPS()
+	game.gridTickAccum += dt * float64(*game.gui.updatesPerSec)
+	for game.gridTickAccum >= 1.0 {
+		game.grid.Tick()
+		game.gridTickAccum -= 1.0
+	}
+
+	game.handleKeys()
+
+	game.gui.Update()
 
 	return nil
 }
@@ -52,10 +61,18 @@ func (game *Game) Draw(screen *ebiten.Image) {
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %d", int(ebiten.ActualFPS())))
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %d", int(ebiten.ActualTPS())), 0, 20)
+
+	game.gui.Draw(screen)
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return ScreenWidth, ScreenHeight
+}
+
+func (game *Game) handleKeys() {
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		game.grid.Randomize()
+	}
 }
 
 func (game *Game) drawGridLines(screen *ebiten.Image) {
