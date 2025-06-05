@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+// TODO: add play/pause button
 type Gui struct {
 	ui            *ebitenui.UI
 	updatesPerSec *int

@@ -22,6 +22,7 @@ type Game struct {
 	grid          Grid
 	images        Images
 	gridTickAccum float64 // accumulator for grid tick timing
+	paused        bool
 }
 
 func NewGame() *Game {
@@ -29,9 +30,11 @@ func NewGame() *Game {
 	grid.Randomize()
 
 	return &Game{
-		gui:    NewGui(),
-		grid:   grid,
-		images: NewImages(CellWidth, CellHeight),
+		gui:           NewGui(),
+		grid:          grid,
+		images:        NewImages(CellWidth, CellHeight),
+		gridTickAccum: 0,
+		paused:        false,
 	}
 }
 
@@ -41,11 +44,13 @@ func (game *Game) Update() error {
 	}
 
 	// determine if we need to update grid cells based on updatesPerSec
-	dt := 1.0 / ebiten.ActualTPS()
-	game.gridTickAccum += dt * float64(*game.gui.updatesPerSec)
-	for game.gridTickAccum >= 1.0 {
-		game.grid.Tick()
-		game.gridTickAccum -= 1.0
+	if !game.paused {
+		dt := 1.0 / ebiten.ActualTPS()
+		game.gridTickAccum += dt * float64(*game.gui.updatesPerSec)
+		for game.gridTickAccum >= 1.0 {
+			game.grid.Tick()
+			game.gridTickAccum -= 1.0
+		}
 	}
 
 	game.handleKeys()
@@ -72,6 +77,10 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 func (game *Game) handleKeys() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		game.grid.Randomize()
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		game.paused = !game.paused
 	}
 }
 
