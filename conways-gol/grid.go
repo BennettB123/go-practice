@@ -82,8 +82,7 @@ func (grid *Grid) Tick() {
 // Get returns the value of the cell at [x, y].
 // If [x, y] is outside the bounds of the grid, returns Dead
 func (g *Grid) Get(x, y int) int {
-	if (x < 0 || x >= g.width) ||
-		(y < 0 || y >= g.height) {
+	if g.outOfBounds(x, y) {
 		return Dead
 	}
 
@@ -91,7 +90,15 @@ func (g *Grid) Get(x, y int) int {
 }
 
 func (g *Grid) Set(x, y, val int) {
+	if g.outOfBounds(x, y) {
+		return
+	}
+
 	g.cells[y][x] = val
+}
+
+func (g Grid) outOfBounds(x, y int) bool {
+	return x < 0 || x >= g.width || y < 0 || y >= g.height
 }
 
 func (g *Grid) Randomize() {
@@ -102,6 +109,14 @@ func (g *Grid) Randomize() {
 			} else {
 				g.Set(x, y, Dead)
 			}
+		}
+	}
+}
+
+func (g *Grid) Clear() {
+	for y := range g.height {
+		for x := range g.width {
+			g.Set(x, y, Dead)
 		}
 	}
 }

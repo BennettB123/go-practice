@@ -10,12 +10,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-const ScreenWidth int = 1000
-const ScreenHeight int = 1000
-const GridWidth int = 50
-const GridHeight int = 50
-const CellWidth int = ScreenWidth / GridWidth
-const CellHeight int = ScreenHeight / GridHeight
+const ScreenWidth int = 1250
+const ScreenHeight int = 1250
+const GridWidth int = 100
+const GridHeight int = 100
+
+var CellWidth float64 = float64(ScreenWidth) / float64(GridWidth)
+var CellHeight float64 = float64(ScreenHeight) / float64(GridHeight)
 
 type Game struct {
 	gui           *Gui
@@ -32,7 +33,7 @@ func NewGame() *Game {
 	return &Game{
 		gui:           NewGui(),
 		grid:          grid,
-		images:        NewImages(CellWidth, CellHeight),
+		images:        NewImages(int(CellWidth), int(CellHeight)),
 		gridTickAccum: 0,
 		paused:        false,
 	}
@@ -54,6 +55,7 @@ func (game *Game) Update() error {
 	}
 
 	game.handleKeys()
+	game.handleMouse()
 
 	game.gui.Update()
 
@@ -82,6 +84,24 @@ func (game *Game) handleKeys() {
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		game.paused = !game.paused
 	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+		game.grid.Clear()
+	}
+}
+
+func (game *Game) handleMouse() {
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		screenX, screenY := ebiten.CursorPosition()
+		gridX, gridY := convertToGridCoords(screenX, screenY)
+		game.grid.Set(gridX, gridY, Alive)
+	}
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+		screenX, screenY := ebiten.CursorPosition()
+		gridX, gridY := convertToGridCoords(screenX, screenY)
+		game.grid.Set(gridX, gridY, Dead)
+	}
 }
 
 func (game *Game) drawGridLines(screen *ebiten.Image) {
@@ -102,7 +122,7 @@ func (game *Game) drawGrid(screen *ebiten.Image) {
 	for y := range GridHeight {
 		for x := range GridWidth {
 			opt.GeoM.Reset()
-			opt.GeoM.Translate(float64(x*CellWidth), float64(y*CellHeight))
+			opt.GeoM.Translate(float64(float64(x)*CellWidth), float64(float64(y)*CellHeight))
 
 			if game.grid.Get(x, y) == Alive {
 				screen.DrawImage(game.images.aliveCell, &opt)
@@ -111,4 +131,18 @@ func (game *Game) drawGrid(screen *ebiten.Image) {
 			}
 		}
 	}
+}
+
+// Returns the coordinates of the grid that coorespond to [screenX, screenY].
+// If [screenX, screenY] is off the screen, returns (-1, -1)
+func convertToGridCoords(screenX, screenY int) (x, y int) {
+	if (screenX < 0 || screenX > ScreenWidth) ||
+		(screenY < 0 || screenY > ScreenHeight) {
+		return -1, -1
+	}
+
+	x = int((float32(screenX) / float32(ScreenWidth)) * float32(GridWidth))
+	y = int((float32(screenY) / float32(ScreenHeight)) * float32(GridHeight))
+
+	return
 }
